@@ -1,0 +1,11 @@
+{
+  "name": "astute-cli-monorepo",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

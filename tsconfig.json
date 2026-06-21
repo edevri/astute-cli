@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/astute-core" },
+    { "path": "packages/astute-cli" }
+  ]
+}

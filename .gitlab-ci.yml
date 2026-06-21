@@ -1,0 +1,10 @@
+stages:
+  - lint
+  - build
+
+include:
+  - project: 'astuteimaging/astute-preview/common-ci-templates'
+    ref: 'dev'
+    file:
+      - '/.gitlab/lint.yml'
+      - '/.gitlab/build.yml'
