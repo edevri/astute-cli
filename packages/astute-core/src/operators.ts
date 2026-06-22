@@ -1,5 +1,5 @@
 import { BffClient } from './client.js'
-import type { Patient, Study, Measurement, GrowthSeries, IFUCheckRow, IFUResult } from './types.js'
+import type { Patient, Study, Measurement, GrowthSeries, IFUCheckRow, IFUResult, SurveillanceResult } from './types.js'
 import { DeviceFamily } from './types.js'
 
 export class PatientOperator {
@@ -27,6 +27,13 @@ export class GrowthSeriesOperator {
   constructor(private client: BffClient) {}
   async get(patientId: number): Promise<GrowthSeries> {
     return this.client.get<GrowthSeries>(`/patient/${patientId}/growth`)
+  }
+}
+
+export class SurveillanceOperator {
+  constructor(private client: BffClient) {}
+  async get(patientId: number): Promise<SurveillanceResult> {
+    return this.client.get<SurveillanceResult>(`/patient/${patientId}/surveillance`)
   }
 }
 

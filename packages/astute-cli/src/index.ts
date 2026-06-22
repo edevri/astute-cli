@@ -7,6 +7,7 @@ import { studyList } from './commands/study.js'
 import { measurementGet } from './commands/measurement.js'
 import { ifuCheck } from './commands/ifu.js'
 import { growthGet } from './commands/growth.js'
+import { surveillanceGet } from './commands/surveillance.js'
 
 const config: AstuteConfig = { version: '0.1.0' }
 
@@ -98,7 +99,14 @@ if (cmd === 'auth') {
     console.error('Usage: astute ifu <families|check>')
     process.exit(1)
   }
+} else if (cmd === 'surveillance') {
+  const patientIdStr = sub
+  if (!patientIdStr || patientIdStr.startsWith('-')) {
+    console.error('Usage: astute surveillance <patientId> [--include-phi] [--json]')
+    process.exit(1)
+  }
+  await surveillanceGet(Number(patientIdStr), rest.includes('--include-phi'), rest.includes('--json'))
 } else {
-  console.error('Usage: astute <auth|patient|study|measurement|growth|ifu> [--version]')
+  console.error('Usage: astute <auth|patient|study|measurement|growth|ifu|surveillance> [--version]')
   process.exit(1)
 }

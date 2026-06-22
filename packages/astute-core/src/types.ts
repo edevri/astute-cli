@@ -48,3 +48,31 @@ export type IFUResult = {
   family: DeviceFamily
   rows: IFUCheckRow[]
 }
+
+export type TwoChannelResult<M, W> = {
+  readonly model: M
+  readonly widgetOnly: W
+}
+
+export type SurveillanceStudyModel = {
+  studyId: number
+  scanDate: string
+  sacDiameterMm: number | null
+  endoleakVolumeMm3: number | null
+  derived: {
+    sacExpansionConcerning: boolean
+    endoleakPresent: boolean
+    provenance: string
+  }
+}
+
+export type SurveillancePHI = {
+  patientName: string | null
+  dob: string | null
+  mrn: string | null
+}
+
+export type SurveillanceResult = TwoChannelResult<
+  { studies: SurveillanceStudyModel[] },
+  SurveillancePHI
+>
