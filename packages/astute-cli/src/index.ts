@@ -13,6 +13,13 @@ if (args.includes('--version')) {
   process.exit(0)
 }
 
+function isTableFormat(flags: string[]): boolean {
+  return (
+    (flags.includes('--format') && flags[flags.indexOf('--format') + 1] === 'table') ||
+    (flags.includes('--output') && flags[flags.indexOf('--output') + 1] === 'table')
+  )
+}
+
 const [cmd, sub, ...rest] = args
 
 if (cmd === 'auth') {
@@ -26,8 +33,7 @@ if (cmd === 'auth') {
   }
 } else if (cmd === 'patient') {
   if (sub === 'list') {
-    const formatTable = rest.includes('--format') && rest[rest.indexOf('--format') + 1] === 'table'
-    await patientList(formatTable)
+    await patientList(isTableFormat(rest))
   } else {
     console.error('Usage: astute patient list [--format table]')
     process.exit(1)
@@ -39,9 +45,7 @@ if (cmd === 'auth') {
       console.error('Usage: astute study list <patientId> [--format table]')
       process.exit(1)
     }
-    const formatTable =
-      rest.includes('--format') && rest[rest.indexOf('--format') + 1] === 'table'
-    await studyList(Number(patientIdStr), formatTable)
+    await studyList(Number(patientIdStr), isTableFormat(rest))
   } else {
     console.error('Usage: astute study list <patientId> [--format table]')
     process.exit(1)

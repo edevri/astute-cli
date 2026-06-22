@@ -327,6 +327,8 @@ services:
     environment:
       PORT: "8080"
       AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+      PATIENT_SERVICE_URL: "http://preview-service-patient:1048"
+      STUDY_SERVICE_URL: "http://preview-service-study:1028"
     ports:
       - "8080:8080"
     depends_on:

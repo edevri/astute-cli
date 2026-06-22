@@ -14,6 +14,9 @@ async function promptLine(question: string): Promise<string> {
 }
 
 async function promptPassword(question: string): Promise<string> {
+  if (!process.stdin.isTTY) {
+    return promptLine(question)
+  }
   process.stdout.write(question)
   return new Promise((resolve) => {
     const chunks: Buffer[] = []

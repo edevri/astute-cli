@@ -13,18 +13,19 @@ export async function studyList(patientId: number, formatTable: boolean): Promis
   const studies = await op.listForPatient(patientId)
 
   if (formatTable) {
+    const widths = [10, 32, 10, 10, 8]
     const cols = ['studyId', 'scanDate', 'anatomy', 'prepost', 'status']
-    console.log(cols.map((c) => c.padEnd(14)).join(''))
-    console.log('-'.repeat(cols.length * 14))
+    console.log(cols.map((c, i) => c.padEnd(widths[i])).join('  '))
+    console.log('-'.repeat(widths.reduce((a, b) => a + b + 2, 0)))
     for (const s of studies) {
       console.log(
         [
-          String(s.studyId).padEnd(14),
-          (s.scanDate ?? '').padEnd(14),
-          (s.anatomy ?? '').padEnd(14),
-          (s.prepost ?? '').padEnd(14),
-          (s.status ?? '').padEnd(14),
-        ].join(''),
+          String(s.studyId).padEnd(widths[0]),
+          (s.scanDate ?? '').padEnd(widths[1]),
+          (s.anatomy ?? '').padEnd(widths[2]),
+          (s.prepost ?? '').padEnd(widths[3]),
+          (s.status ?? '').padEnd(widths[4]),
+        ].join('  '),
       )
     }
   } else {
