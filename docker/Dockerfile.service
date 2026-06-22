@@ -1,0 +1,27 @@
+FROM python:3.11-slim
+
+ARG PORT=8080
+ARG APP_MODULE=app:main_app
+# Declared but unused — silence ARGs that service setup.py/Dockerfiles may reference
+ARG TOKEN=unused
+ARG USER=unused
+ARG COMMON_PYTHON_PROJECT_ID=unused
+ARG COMMON_PYTHON_VERSION=unused
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+RUN pip install --upgrade pip wheel setuptools
+
+# Install astute-common-python from local source (no GitLab token required).
+# Build context must have common-python/ and service/ subdirectories.
+COPY common-python/ /tmp/common-python/
+RUN pip install --no-cache-dir /tmp/common-python
+
+# Install the service itself
+COPY service/ .
+RUN pip install --no-cache-dir -e .
+
+ENV APP_MODULE=${APP_MODULE}
+EXPOSE ${PORT}
+CMD gunicorn $APP_MODULE

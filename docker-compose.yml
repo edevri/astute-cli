@@ -1,0 +1,343 @@
+name: astute-cli-local
+
+# Offline development stack for the astute-agent epic.
+# Build first: ./docker/build.sh
+# Then:        docker compose up
+
+services:
+
+  # ── Infrastructure ────────────────────────────────────────────────────────
+
+  postgres:
+    build:
+      context: ../db
+    image: preview-sql
+    container_name: preview-sql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "f**b@ll"
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - astute-local
+
+  redis:
+    image: redis:7-alpine
+    container_name: astute-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - astute-local
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: astute-azurite
+    command: azurite --location /data --debug /data/debug.log --blobHost 0.0.0.0
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite-data:/data
+    networks:
+      - astute-local
+
+  # ── Auth & User ───────────────────────────────────────────────────────────
+
+  service-authenticate:
+    image: astute-local/service-authenticate
+    container_name: preview-service-authenticate
+    environment:
+      PORT: "8000"
+      WORKERS: "4"
+      TIMEOUT: "60"
+      DATABASE_URL: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
+      SQLALCHEMY_DATABASE_URI: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
+      JWKS_URL: "http://preview-service-authenticate:8000/.well-known/jwks.json"
+      USER_SERVICE_URL: "http://preview-service-user:8000"
+      ORGANIZATION_URL: "http://preview-service-organization:1061"
+      EMAIL_SERVICE_URL: "http://preview-service-authenticate:8000"  # stub — not needed for CLI
+      AUDIT_ACTION_URL: "http://preview-service-authenticate:8000"   # stub — not needed for CLI
+      REDIS_HOST: "astute-redis"
+      REDIS_PORT: "6379"
+    volumes:
+      - ../service-authenticate/keys:/app/keys:ro
+      - ../service-authenticate/keys_public:/app/keys_public:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-authenticate
+
+  service-user:
+    image: astute-local/service-user
+    container_name: preview-service-user
+    environment:
+      PORT: "8000"
+      WORKERS: "2"
+      TIMEOUT: "60"
+      DATABASE_URL: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-user
+
+  # ── Core domain services ──────────────────────────────────────────────────
+
+  service-organization:
+    image: astute-local/service-organization
+    container_name: preview-service-organization
+    environment:
+      PORT: "1061"
+      WORKERS: "2"
+      TIMEOUT: "180"
+      DATABASE_URL: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+      USER_SERVICE_URL: "http://preview-service-user:8000"
+      # Unused upstream stubs (not needed for CLI read paths)
+      PROVISION_CUSTOMER_SERVICE_URL: "http://preview-service-organization:1061"
+      ARMORCAR_URL: "http://preview-service-organization:1061"
+    ports:
+      - "1061:1061"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-authenticate:
+        condition: service_healthy
+      service-user:
+        condition: service_started
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-organization
+
+  service-patient:
+    image: astute-local/service-patient
+    container_name: preview-service-patient
+    environment:
+      PORT: "1048"
+      WORKERS: "2"
+      TIMEOUT: "60"
+      DATABASE_URL: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+      USER_SERVICE_URL: "http://preview-service-user:8000"
+    ports:
+      - "1048:1048"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-authenticate:
+        condition: service_healthy
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-patient
+
+  service-study:
+    image: astute-local/service-study
+    container_name: preview-service-study
+    environment:
+      PORT: "1028"
+      WORKERS: "2"
+      TIMEOUT: "60"
+      DATABASE_URL: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+      USER_SERVICE_URL: "http://preview-service-user:8000"
+    ports:
+      - "1028:1028"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-authenticate:
+        condition: service_healthy
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-study
+
+  service-protocol:
+    image: astute-local/service-protocol
+    container_name: preview-service-protocol
+    environment:
+      PORT: "1037"
+      WORKERS: "2"
+      TIMEOUT: "60"
+      DATABASE_URL: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+      STUDY_SERVICE_URL: "http://preview-service-study:1028"
+      ORGANIZATION_SERVICE_URL: "http://preview-service-organization:1061"
+      ORDER_SERVICE_URL: "http://preview-service-protocol:1037"  # stub
+    ports:
+      - "1037:1037"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-authenticate:
+        condition: service_healthy
+      service-study:
+        condition: service_started
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-protocol
+
+  # ── Storage & Blob ────────────────────────────────────────────────────────
+
+  service-storage-azure:
+    image: astute-local/service-storage-azure
+    container_name: service-storage-azure
+    environment:
+      PORT: "1024"
+      WORKERS: "2"
+      TIMEOUT: "180"
+      COMPRESSION_LEVEL: "6"
+      ACCOUNT_URL: "http://azurite:10000/devstoreaccount1"
+      DEV_STORAGE: "devstoreaccount1"
+      DEV_KEY: "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
+      STUDY_SERVICE_URL: "http://preview-service-study:1028"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+      LEASE_DURATION: "15"
+      MIN_LEASE_DURATION: "15"
+    ports:
+      - "1024:1024"
+    depends_on:
+      azurite:
+        condition: service_started
+      service-authenticate:
+        condition: service_healthy
+      service-study:
+        condition: service_started
+    networks:
+      astute-local:
+        aliases:
+          - service-storage-azure
+
+  # ── Measurement stack ─────────────────────────────────────────────────────
+
+  service-calc-generate:
+    image: astute-local/service-calc-generate
+    container_name: preview-service-calc-generate
+    environment:
+      PORT: "1043"
+      WORKERS: "2"
+      TIMEOUT: "60"
+      DATABASE_URL: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+      CALC_SERVICE_URL: "http://preview-service-calc:1032"
+      MARK_SERVICE_URL: "http://preview-service-mark:1031"
+      PROTOCOL_SERVICE_URL: "http://preview-service-protocol:1037"
+      STORAGE_SERVICE_URL: "http://service-storage-azure:1024"
+      STUDY_SERVICE_URL: "http://preview-service-study:1028"
+      USER_SERVICE_URL: "http://preview-service-user:8000"
+      DIAMETER_SERVICE_URL: ""
+      OPERATION_TZ: "America/New_York"
+    ports:
+      - "1043:1043"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-storage-azure:
+        condition: service_started
+      service-protocol:
+        condition: service_started
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-calc-generate
+
+  service-calc:
+    image: astute-local/service-calc
+    container_name: preview-service-calc
+    environment:
+      PORT: "1032"
+      WORKERS: "2"
+      TIMEOUT: "60"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+      STORAGE_SERVICE_URL: "http://service-storage-azure:1024"
+      STUDY_SERVICE_URL: "http://preview-service-study:1028"
+      CALC_GENERATE_SERVICE_URL: "http://preview-service-calc-generate:1043"
+      PROTOCOL_SERVICE_URL: "http://preview-service-protocol:1037"
+      ASTUTE_STORAGE_BACKEND: "service"
+      ACCOUNT_URL: "http://azurite:10000/devstoreaccount1"
+      OPERATION_TZ: "America/New_York"
+    ports:
+      - "1032:1032"
+    depends_on:
+      service-authenticate:
+        condition: service_healthy
+      service-storage-azure:
+        condition: service_started
+      service-calc-generate:
+        condition: service_started
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-calc
+
+  service-mark:
+    image: astute-local/service-mark
+    container_name: preview-service-mark
+    environment:
+      PORT: "1031"
+      WORKERS: "2"
+      TIMEOUT: "60"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+      STORAGE_SERVICE_URL: "http://service-storage-azure:1024"
+      STUDY_SERVICE_URL: "http://preview-service-study:1028"
+      CALC_GENERATE_SERVICE_URL: "http://preview-service-calc-generate:1043"
+      OPERATION_TZ: "America/New_York"
+    ports:
+      - "1031:1031"
+    depends_on:
+      service-authenticate:
+        condition: service_healthy
+      service-storage-azure:
+        condition: service_started
+      service-calc-generate:
+        condition: service_started
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-mark
+
+  # ── BFF ───────────────────────────────────────────────────────────────────
+
+  bff-cli:
+    image: astute-local/bff-cli
+    container_name: bff-cli
+    environment:
+      PORT: "8080"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+    ports:
+      - "8080:8080"
+    depends_on:
+      service-authenticate:
+        condition: service_healthy
+    networks:
+      - astute-local
+
+networks:
+  astute-local:
+    driver: bridge
+
+volumes:
+  azurite-data:
