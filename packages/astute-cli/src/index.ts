@@ -68,7 +68,9 @@ if (cmd === 'auth') {
     process.exit(1)
   }
 } else if (cmd === 'ifu') {
-  if (sub === 'check') {
+  if (sub === 'families') {
+    console.log(Object.values(DeviceFamily).join('\n'))
+  } else if (sub === 'check') {
     const studyIdStr = rest.find((a) => !a.startsWith('-'))
     if (!studyIdStr) {
       console.error('Usage: astute ifu check <studyId> [--family <name>] [--format table]')
@@ -85,7 +87,7 @@ if (cmd === 'auth') {
     }
     await ifuCheck(Number(studyIdStr), familyFilter, isTableFormat(rest))
   } else {
-    console.error('Usage: astute ifu check <studyId> [--family <name>] [--format table]')
+    console.error('Usage: astute ifu <families|check>')
     process.exit(1)
   }
 } else {
