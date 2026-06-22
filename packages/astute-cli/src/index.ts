@@ -3,6 +3,7 @@ import type { AstuteConfig } from '@astuteimaging/astute-core'
 import { authLogin, authWhoami } from './commands/auth.js'
 import { patientList } from './commands/patient.js'
 import { studyList } from './commands/study.js'
+import { measurementGet } from './commands/measurement.js'
 
 const config: AstuteConfig = { version: '0.1.0' }
 
@@ -50,7 +51,21 @@ if (cmd === 'auth') {
     console.error('Usage: astute study list <patientId> [--format table]')
     process.exit(1)
   }
+} else if (cmd === 'measurement') {
+  if (sub === 'get') {
+    const studyIdStr = rest.find((a) => !a.startsWith('-'))
+    if (!studyIdStr) {
+      console.error('Usage: astute measurement get <studyId> [--field <name>] [--format table]')
+      process.exit(1)
+    }
+    const fieldIdx = rest.indexOf('--field')
+    const fieldFilter = fieldIdx !== -1 ? (rest[fieldIdx + 1] ?? null) : null
+    await measurementGet(Number(studyIdStr), fieldFilter, isTableFormat(rest))
+  } else {
+    console.error('Usage: astute measurement get <studyId> [--field <name>] [--format table]')
+    process.exit(1)
+  }
 } else {
-  console.error('Usage: astute <auth|patient|study> [--version]')
+  console.error('Usage: astute <auth|patient|study|measurement> [--version]')
   process.exit(1)
 }

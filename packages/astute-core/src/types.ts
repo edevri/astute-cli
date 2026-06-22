@@ -7,3 +7,4 @@ export type Study = {
   status: string
   protocol: string | null
 }
+export type Measurement = { field: string; value: number; unit: string }
