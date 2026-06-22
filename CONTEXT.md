@@ -94,11 +94,11 @@ Astute microservices (service-patient, service-study, service-calc, …)
 ```
 
 **Two-Channel Return Type**
-Every tool/function returns:
-- `model` section — de-identified, safe for the model's reasoning context → `structuredContent`
-- `widgetOnly` section — may contain PHI, routed to UI only → `_meta`
+Every operator returns `TwoChannelResult<M, W>` without exception:
+- `model` — de-identified, safe for the model's reasoning context → `structuredContent`
+- `widgetOnly` — may contain PHI, routed to UI only → `_meta`
 
-Identifiers never appear in `structuredContent`/`content`.
+The `--include-phi` flag exists on every CLI command. For operators with no PHI fields (`growth`, `measurement`, `ifu`), `widgetOnly` is always `{}` and `--include-phi` prints an info message: `"This command has no PHI fields."` The uniform interface makes the PHI boundary explicit and auditable regardless of which operator is called.
 
 **observed vs. derived**
 - `observed`: raw fetched fields from the platform (measurements, dates, imaging results)
@@ -109,6 +109,8 @@ Every derived field carries the guideline citation that produced it (e.g. "SVS 2
 
 **find_patient (resolver)**
 Scoped patient lookup: returns `patient_id` + `outside_id` (MRN-like) + `sex` as the minimal non-identifying clinical disambiguator. Implemented by calling `GET /patient/physician-patients` on service-patient — access is enforced **at the DB/query level** by that service (via `physician_patient_associations` + `patient_group_associations`, keyed off `user_id` in the JWT). No access filtering needed in core or MCP. Audited as search-class egress.
+
+**PHI fan-out rule:** PHI fields (`firstName`, `lastName`, `dob`, `outsideId`) are only fetched when the caller explicitly requests them. This is enforced at the **BFF level** via a `?includePhi=true` query parameter — not at the CLI print layer. Without `?includePhi=true`, the BFF makes no PHI-bearing upstream call and `widgetOnly` is always `{}`. This ensures that MCP tools, which pass BFF responses directly into model context, structurally cannot receive PHI unless the tool was explicitly constructed to request it.
 
 **Egress Audit Line**
 A structured log entry emitted on every tool call: clinician, patientId, fields returned, timestamp. Resolver calls flagged search-class.
@@ -164,6 +166,16 @@ Real authentication via the existing auth-service (astute@imaging issuer, JWKS a
 PHI is in `widgetOnly` / `_meta` — it reaches the iframe UI but not the model's input tokens.
 
 **Production target (parked, ADR'd):** "No PHI touches the vendor at all." Achieved via direct-callback widget (iframe authenticates back to Astute for PHI directly).
+
+**Internal identifiers (NOT PHI — safe in `model` channel):**
+- `patientId` — internal DB surrogate key, no real-world re-identification value
+- `studyId` (`modelno`) — internal DB surrogate key
+- `scanDate` — imaging date; not PHI, safe in `model` channel
+
+**PHI fields (must be gated to `widgetOnly`):**
+- `outsideId` — external MRN or patient reference number
+- `firstName`, `lastName` — patient name
+- `dob` — date of birth
 
 ---
 
