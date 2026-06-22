@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import type { AstuteConfig } from '@astuteimaging/astute-core'
+import { DeviceFamily } from '@astuteimaging/astute-core'
 import { authLogin, authWhoami } from './commands/auth.js'
 import { patientList } from './commands/patient.js'
 import { studyList } from './commands/study.js'
 import { measurementGet } from './commands/measurement.js'
+import { ifuCheck } from './commands/ifu.js'
 
 const config: AstuteConfig = { version: '0.1.0' }
 
@@ -65,7 +67,28 @@ if (cmd === 'auth') {
     console.error('Usage: astute measurement get <studyId> [--field <name>] [--format table]')
     process.exit(1)
   }
+} else if (cmd === 'ifu') {
+  if (sub === 'check') {
+    const studyIdStr = rest.find((a) => !a.startsWith('-'))
+    if (!studyIdStr) {
+      console.error('Usage: astute ifu check <studyId> [--family <name>] [--format table]')
+      process.exit(1)
+    }
+    const familyIdx = rest.indexOf('--family')
+    const familyArg = familyIdx !== -1 ? (rest[familyIdx + 1] ?? null) : null
+    const familyFilter = familyArg
+      ? (Object.values(DeviceFamily).find((f) => f === familyArg) ?? null)
+      : null
+    if (familyArg && !familyFilter) {
+      console.error(`Unknown family "${familyArg}". Valid: ${Object.values(DeviceFamily).join(', ')}`)
+      process.exit(1)
+    }
+    await ifuCheck(Number(studyIdStr), familyFilter, isTableFormat(rest))
+  } else {
+    console.error('Usage: astute ifu check <studyId> [--family <name>] [--format table]')
+    process.exit(1)
+  }
 } else {
-  console.error('Usage: astute <auth|patient|study|measurement> [--version]')
+  console.error('Usage: astute <auth|patient|study|measurement|ifu> [--version]')
   process.exit(1)
 }
