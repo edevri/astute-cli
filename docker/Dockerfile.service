@@ -14,12 +14,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev &
 RUN pip install --upgrade pip wheel setuptools
 
 # Install astute-common-python from local source (no GitLab token required).
-# Build context must have common-python/ and service/ subdirectories.
-COPY common-python/ /tmp/common-python/
+# Named build contexts --build-context common-python=... --build-context service=...
+# are passed by build.sh so each source directory is checksummed independently.
+COPY --from=common-python . /tmp/common-python/
 RUN pip install --no-cache-dir /tmp/common-python
 
 # Install the service itself
-COPY service/ .
+COPY --from=service . .
 RUN pip install --no-cache-dir -e .
 
 ENV APP_MODULE=${APP_MODULE}

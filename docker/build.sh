@@ -22,20 +22,15 @@ build_python_service() {
   echo ""
   echo "▶ Building astute-local/$name ..."
 
-  local ctx
-  ctx="$(mktemp -d)"
-
-  cp -r "$REPOS/$repo/." "$ctx/service/"
-  cp -r "$REPOS/common-python/." "$ctx/common-python/"
-
   docker build \
     --platform "$PLATFORM" \
     --build-arg "APP_MODULE=$app_module" \
+    --build-context "common-python=$REPOS/common-python" \
+    --build-context "service=$REPOS/$repo" \
     -f "$DOCKERFILE" \
     -t "astute-local/$name" \
-    "$ctx"
+    "$SCRIPT_DIR"
 
-  rm -rf "$ctx"
   echo "✓ astute-local/$name"
 }
 
@@ -68,6 +63,16 @@ build_python_service service-mark          service-mark
 
 # ── Node services ─────────────────────────────────────────────────────────
 build_node_service bff-cli bff-cli
+
+# mcp-cli depends on astute-core via file: dep, so build context must be repos/ root
+echo ""
+echo "▶ Building astute-local/mcp-cli ..."
+docker build \
+  --platform "$PLATFORM" \
+  -f "$REPOS/mcp-cli/Dockerfile" \
+  -t "astute-local/mcp-cli" \
+  "$REPOS"
+echo "✓ astute-local/mcp-cli"
 
 echo ""
 echo "All images built. Run: docker compose up"
