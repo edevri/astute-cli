@@ -2,6 +2,7 @@
 import type { AstuteConfig } from '@astuteimaging/astute-core'
 import { DeviceFamily } from '@astuteimaging/astute-core'
 import { authLogin, authWhoami } from './commands/auth.js'
+import { authToken } from './commands/auth-token.js'
 import { patientList } from './commands/patient.js'
 import { studyList } from './commands/study.js'
 import { measurementGet } from './commands/measurement.js'
@@ -32,8 +33,10 @@ if (cmd === 'auth') {
     await authLogin()
   } else if (sub === 'whoami') {
     await authWhoami()
+  } else if (sub === 'token') {
+    await authToken()
   } else {
-    console.error('Usage: astute auth <login|whoami>')
+    console.error('Usage: astute auth <login|whoami|token>')
     process.exit(1)
   }
 } else if (cmd === 'patient') {
@@ -107,6 +110,6 @@ if (cmd === 'auth') {
   }
   await surveillanceGet(Number(patientIdStr), rest.includes('--include-phi'), rest.includes('--json'))
 } else {
-  console.error('Usage: astute <auth|patient|study|measurement|growth|ifu|surveillance> [--version]')
+  console.error('Usage: astute <auth|patient|study|measurement|growth|ifu|surveillance> [--version]\n       astute auth <login|whoami|token>')
   process.exit(1)
 }
