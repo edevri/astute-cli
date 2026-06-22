@@ -9,6 +9,25 @@ export type Study = {
 }
 export type Measurement = { field: string; value: number; unit: string }
 
+export type GrowthPoint = {
+  studyId: number
+  scanDate: string
+  maxSacDiameterMm: number
+  observed: true
+}
+
+export type GrowthDerived = {
+  repairThresholdCrossed: boolean
+  acceleratedGrowth: boolean
+  latestDiameterMm: number
+  provenance: string
+}
+
+export type GrowthSeries = {
+  points: GrowthPoint[]
+  derived: GrowthDerived
+}
+
 export enum DeviceFamily {
   EndurantIIs = 'EndurantIIs',
   GoreExcluderStd = 'GoreExcluderStd',
