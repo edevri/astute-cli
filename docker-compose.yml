@@ -329,6 +329,9 @@ services:
       AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
       PATIENT_SERVICE_URL: "http://preview-service-patient:1048"
       STUDY_SERVICE_URL: "http://preview-service-study:1028"
+      CALC_SERVICE_URL: "http://preview-service-calc:1032"
+      PROTOCOL_SERVICE_URL: "http://preview-service-protocol:1037"
+      MARK_SERVICE_URL: "http://preview-service-mark:1031"
     ports:
       - "8080:8080"
     depends_on:
