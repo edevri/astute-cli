@@ -49,13 +49,13 @@ if (cmd === 'auth') {
 } else if (cmd === 'study') {
   if (sub === 'list') {
     const patientIdStr = rest.find((a) => !a.startsWith('-'))
-    if (!patientIdStr) {
-      console.error('Usage: astute study list <patientId> [--format table]')
-      process.exit(1)
-    }
-    await studyList(Number(patientIdStr), isTableFormat(rest))
+    await studyList(
+      patientIdStr !== undefined ? Number(patientIdStr) : undefined,
+      rest.includes('--include-phi'),
+      isTableFormat(rest),
+    )
   } else {
-    console.error('Usage: astute study list <patientId> [--format table]')
+    console.error('Usage: astute study list [<patientId>] [--include-phi] [--format table]')
     process.exit(1)
   }
 } else if (cmd === 'measurement') {

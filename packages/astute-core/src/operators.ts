@@ -1,5 +1,5 @@
 import { BffClient } from './client.js'
-import type { Patient, PatientResult, Study, Measurement, GrowthSeries, IFUCheckRow, IFUResult, SurveillanceResult } from './types.js'
+import type { Patient, PatientResult, Study, StudyResult, Measurement, GrowthSeries, IFUCheckRow, IFUResult, SurveillanceResult } from './types.js'
 import { DeviceFamily } from './types.js'
 
 export class PatientOperator {
@@ -12,8 +12,11 @@ export class PatientOperator {
 
 export class StudyOperator {
   constructor(private client: BffClient) {}
-  async listForPatient(patientId: number): Promise<Study[]> {
-    return this.client.get<Study[]>(`/patient/${patientId}/studies`)
+  async list(patientId?: number, opts?: { includePhi?: boolean }): Promise<StudyResult> {
+    const params: Record<string, string> = {}
+    if (patientId !== undefined) params['patientId'] = String(patientId)
+    if (opts?.includePhi) params['includePhi'] = 'true'
+    return this.client.get<StudyResult>('/study', Object.keys(params).length ? params : undefined)
   }
 }
 

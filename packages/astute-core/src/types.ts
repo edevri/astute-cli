@@ -10,6 +10,9 @@ export type Study = {
   status: string
   protocol: string | null
 }
+export type StudyModel = { studyId: number; patientId: number; scanDate: string; anatomy: string; prepost: string; status: string }
+export type StudyPHI = { patientName: string | null; dob: string | null; outsideId: string | null }
+export type StudyResult = TwoChannelResult<{ studies: StudyModel[] }, StudyPHI[]>
 export type Measurement = { field: string; value: number; unit: string }
 
 export type GrowthPoint = {
