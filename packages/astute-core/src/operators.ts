@@ -1,5 +1,5 @@
 import { BffClient } from './client.js'
-import type { Patient, PatientResult, Study, StudyResult, Measurement, GrowthSeries, IFUCheckRow, IFUResult, SurveillanceResult } from './types.js'
+import type { Patient, PatientResult, Study, StudyResult, Measurement, MeasurementResult, GrowthSeries, IFUCheckRow, IFUResult, IFUCheckResult, SurveillanceResult } from './types.js'
 import { DeviceFamily } from './types.js'
 
 export class PatientOperator {
@@ -22,8 +22,9 @@ export class StudyOperator {
 
 export class MeasurementOperator {
   constructor(private client: BffClient) {}
-  async getForStudy(studyId: number): Promise<Measurement[]> {
-    return this.client.get<Measurement[]>(`/study/${studyId}/measurements`)
+  async getForStudy(studyId: number): Promise<MeasurementResult> {
+    const measurements = await this.client.get<Measurement[]>(`/study/${studyId}/measurements`)
+    return { model: { measurements }, widgetOnly: {} }
   }
 }
 
@@ -182,7 +183,7 @@ const IFU_SPECS: Record<DeviceFamily, IFUSpec[]> = {
 }
 
 export class IFUCheck {
-  static run(measurements: Measurement[], family: DeviceFamily): IFUResult {
+  static run(measurements: Measurement[], family: DeviceFamily): IFUCheckResult {
     const byField = new Map(measurements.map((m) => [m.field.toLowerCase(), m.value]))
     const rows: IFUCheckRow[] = []
 
@@ -196,6 +197,6 @@ export class IFUCheck {
       }
     }
 
-    return { family, rows }
+    return { model: { family, rows }, widgetOnly: {} }
   }
 }

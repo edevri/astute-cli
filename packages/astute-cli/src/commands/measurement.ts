@@ -4,8 +4,14 @@ import { loadToken } from '../lib/token.js'
 export async function measurementGet(
   studyId: number,
   fieldFilter: string | null,
+  includePhi: boolean,
   formatTable: boolean,
 ): Promise<void> {
+  if (includePhi) {
+    console.log('This command has no PHI fields.')
+    return
+  }
+
   const token = await loadToken()
   if (!token) {
     console.error('Not logged in. Run: astute auth login')
@@ -14,7 +20,8 @@ export async function measurementGet(
 
   const client = new BffClient(token)
   const op = new MeasurementOperator(client)
-  let measurements = await op.getForStudy(studyId)
+  const result = await op.getForStudy(studyId)
+  let measurements = result.model.measurements
 
   if (fieldFilter) {
     measurements = measurements.filter(

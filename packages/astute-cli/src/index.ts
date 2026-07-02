@@ -67,7 +67,7 @@ if (cmd === 'auth') {
     }
     const fieldIdx = rest.indexOf('--field')
     const fieldFilter = fieldIdx !== -1 ? (rest[fieldIdx + 1] ?? null) : null
-    await measurementGet(Number(studyIdStr), fieldFilter, isTableFormat(rest))
+    await measurementGet(Number(studyIdStr), fieldFilter, rest.includes('--include-phi'), isTableFormat(rest))
   } else {
     console.error('Usage: astute measurement get <studyId> [--field <name>] [--format table]')
     process.exit(1)
@@ -78,7 +78,7 @@ if (cmd === 'auth') {
     console.error('Usage: astute growth <patientId> [--json]')
     process.exit(1)
   }
-  await growthGet(Number(patientIdStr), rest.includes('--json'))
+  await growthGet(Number(patientIdStr), rest.includes('--include-phi'), rest.includes('--json'))
 } else if (cmd === 'ifu') {
   if (sub === 'families') {
     console.log(Object.values(DeviceFamily).join('\n'))
@@ -97,7 +97,7 @@ if (cmd === 'auth') {
       console.error(`Unknown family "${familyArg}". Valid: ${Object.values(DeviceFamily).join(', ')}`)
       process.exit(1)
     }
-    await ifuCheck(Number(studyIdStr), familyFilter, isTableFormat(rest))
+    await ifuCheck(Number(studyIdStr), familyFilter, rest.includes('--include-phi'), isTableFormat(rest))
   } else {
     console.error('Usage: astute ifu <families|check>')
     process.exit(1)

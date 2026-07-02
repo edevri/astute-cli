@@ -19,8 +19,14 @@ const FAMILY_DISPLAY: Record<DeviceFamily, string> = {
 export async function ifuCheck(
   studyId: number,
   familyFilter: DeviceFamily | null,
+  includePhi: boolean,
   formatTable: boolean,
 ): Promise<void> {
+  if (includePhi) {
+    console.log('This command has no PHI fields.')
+    return
+  }
+
   const token = await loadToken()
   if (!token) {
     console.error('Not logged in. Run: astute auth login')
@@ -28,10 +34,10 @@ export async function ifuCheck(
   }
 
   const client = new BffClient(token)
-  const measurements = await new MeasurementOperator(client).getForStudy(studyId)
+  const measurementResult = await new MeasurementOperator(client).getForStudy(studyId)
 
   const families = familyFilter ? [familyFilter] : ALL_FAMILIES
-  const rows: IFUCheckRow[] = families.flatMap((f) => IFUCheck.run(measurements, f).rows)
+  const rows: IFUCheckRow[] = families.flatMap((f) => IFUCheck.run(measurementResult.model.measurements, f).model.rows)
 
   if (formatTable) {
     const w = [26, 26, 8, 10, 6]

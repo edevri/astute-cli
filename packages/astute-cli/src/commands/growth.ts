@@ -2,7 +2,7 @@ import { BffClient, GrowthSeriesOperator } from '@astuteimaging/astute-core'
 import type { GrowthPoint } from '@astuteimaging/astute-core'
 import { loadToken } from '../lib/token.js'
 
-export async function growthGet(patientId: number, jsonOutput: boolean): Promise<void> {
+export async function growthGet(patientId: number, includePhi: boolean, jsonOutput: boolean): Promise<void> {
   const token = await loadToken()
   if (!token) {
     console.error('Not logged in. Run: astute auth login')
@@ -11,7 +11,7 @@ export async function growthGet(patientId: number, jsonOutput: boolean): Promise
 
   const client = new BffClient(token)
   const op = new GrowthSeriesOperator(client)
-  const series = await op.get(patientId)
+  const series = await op.get(patientId, { includePhi })
 
   if (jsonOutput) {
     console.log(JSON.stringify(series.model, null, 2))
@@ -53,4 +53,7 @@ export async function growthGet(patientId: number, jsonOutput: boolean): Promise
   })
 
   console.log(`\nProvenance: ${derived.provenance}`)
+  if (includePhi && series.widgetOnly.patientName) {
+    console.log(`Patient: ${series.widgetOnly.patientName}`)
+  }
 }
