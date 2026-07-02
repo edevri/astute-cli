@@ -61,6 +61,7 @@ services:
       DATABASE_URL: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
       SQLALCHEMY_DATABASE_URI: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
       JWKS_URL: "http://preview-service-authenticate:8000/.well-known/jwks.json"
+      DEMO_TOKEN_TTL_HOURS: "12"
       USER_SERVICE_URL: "http://preview-service-user:8000"
       ORGANIZATION_URL: "http://preview-service-organization:1061"
       EMAIL_SERVICE_URL: "http://preview-service-authenticate:8000"  # stub — not needed for CLI
