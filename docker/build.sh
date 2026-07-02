@@ -74,5 +74,7 @@ docker build \
   "$REPOS"
 echo "✓ astute-local/mcp-cli"
 
+build_node_service web-cli web-cli
+
 echo ""
 echo "All images built. Run: docker compose up"

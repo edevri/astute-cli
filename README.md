@@ -60,7 +60,7 @@ docker context create colima --docker "host=unix://$HOME/.colima/default/docker.
 docker context use colima
 ```
 
-### 6. Start the local stack
+### 6. Start the local stack (everyday command)
 
 Build images once (takes a few minutes — builds 10+ Python services + bff-cli):
 
@@ -83,11 +83,43 @@ Re-run `./docker/build.sh` only when service source changes. Infrastructure imag
 
 Services: postgres (5432), redis (6379), azurite (blob storage), auth, user, organization, patient, study, protocol, storage-azure, calc, mark, bff-cli (8080).
 
-### 6. Authenticate
+### 7. Authenticate
 
 ```sh
 astute auth login
 ```
+
+Credentials for the local stack: `afouad` / `test1234`
+
+### 8. Seed synthetic test data (first time only)
+
+The DB dump has studies but no measurement records, so `astute growth` and `astute surveillance` return empty results against real DB data. Run the seed script once to create a synthetic patient with complete data:
+
+```sh
+# Requires: azure-storage-blob psycopg2-binary
+pip3 install azure-storage-blob psycopg2-binary --break-system-packages
+
+python3 docker/seed-synthetic.py
+```
+
+This inserts into the local postgres and uploads `.rpl` measurement files to Azurite. It is idempotent — safe to re-run.
+
+**What gets created:**
+
+| patientId | studies | scenario |
+|-----------|---------|----------|
+| 299001 | 3 pre-op (Jan 2022 → Jul 2022 → Jan 2023) | Growth arc: 42 → 48.5 → 55.2 mm — accelerated growth + repair threshold crossed |
+| 299001 | 2 post-op (Jun 2023 → Jan 2024) | Sac expansion: 50 → 57.3 mm (>5 mm) + endoleak present |
+
+**Verify:**
+
+```sh
+astute study list 299001
+astute growth 299001        # should show 3 points, acceleratedGrowth: true, repairThresholdCrossed: true
+astute surveillance 299001  # should show 2 points, sacExpansionConcerning: true, endoleakPresent: true
+```
+
+> The seed script bypasses the storage service and writes blobs directly to Azurite. Clinical values are not accurate — use this only for technical verification of the pipeline.
 
 ---
 

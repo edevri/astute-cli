@@ -347,6 +347,7 @@ services:
       PORT: "8080"
       AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
       BFF_CLI_URL: "http://bff-cli:8080"
+      WEB_CLI_URL: "http://web-cli:8080"
     ports:
       - "8090:8080"
     depends_on:
@@ -354,6 +355,18 @@ services:
         condition: service_healthy
       bff-cli:
         condition: service_started
+      web-cli:
+        condition: service_started
+    networks:
+      - astute-local
+
+  web-cli:
+    image: astute-local/web-cli
+    container_name: web-cli
+    environment:
+      PORT: "8080"
+    ports:
+      - "8091:8080"
     networks:
       - astute-local
 
