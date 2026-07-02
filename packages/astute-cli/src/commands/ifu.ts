@@ -24,7 +24,6 @@ export async function ifuCheck(
 ): Promise<void> {
   if (includePhi) {
     console.log('This command has no PHI fields.')
-    return
   }
 
   const token = await loadToken()
