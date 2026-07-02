@@ -41,9 +41,9 @@ if (cmd === 'auth') {
   }
 } else if (cmd === 'patient') {
   if (sub === 'list') {
-    await patientList(isTableFormat(rest))
+    await patientList(rest.includes('--include-phi'), isTableFormat(rest))
   } else {
-    console.error('Usage: astute patient list [--format table]')
+    console.error('Usage: astute patient list [--include-phi] [--format table]')
     process.exit(1)
   }
 } else if (cmd === 'study') {

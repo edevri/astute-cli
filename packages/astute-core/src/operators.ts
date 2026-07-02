@@ -1,11 +1,12 @@
 import { BffClient } from './client.js'
-import type { Patient, Study, Measurement, GrowthSeries, IFUCheckRow, IFUResult, SurveillanceResult } from './types.js'
+import type { Patient, PatientResult, Study, Measurement, GrowthSeries, IFUCheckRow, IFUResult, SurveillanceResult } from './types.js'
 import { DeviceFamily } from './types.js'
 
 export class PatientOperator {
   constructor(private client: BffClient) {}
-  async list(): Promise<Patient[]> {
-    return this.client.get<Patient[]>('/patient')
+  async list(opts?: { includePhi?: boolean }): Promise<PatientResult> {
+    const params = opts?.includePhi ? { includePhi: 'true' } : undefined
+    return this.client.get<PatientResult>('/patient', params)
   }
 }
 

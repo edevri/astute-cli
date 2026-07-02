@@ -1,4 +1,7 @@
 export type Patient = { patientId: number; outsideId: string | null; sex: string | null }
+export type PatientModel = { patientId: number; sex: string | null }
+export type PatientPHI = { outsideId: string | null; firstName: string | null; lastName: string | null; dob: string | null }
+export type PatientResult = TwoChannelResult<{ patients: PatientModel[] }, PatientPHI[]>
 export type Study = {
   studyId: number
   scanDate: string
