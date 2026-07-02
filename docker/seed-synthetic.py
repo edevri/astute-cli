@@ -80,8 +80,6 @@ set _PLAN_DOC($_PLAN_DOC(no),Visible)       {{1}}
 set _PLAN_DOC($_PLAN_DOC(no),Trans)         {{0}}
 set _PLAN_DOC($_PLAN_DOC(no),TransLevel)    {{0}}
 set _PLAN_DOC($_PLAN_DOC(no),Value)         {{{sac_mm}}}
-set _PLAN_DOC($_PLAN_DOC(no),mark1)         {{}}
-set _PLAN_DOC($_PLAN_DOC(no),mark2)         {{}}
 set _PLAN_DOC($_PLAN_DOC(no),calcModelType) {{oblique}}
 set _PLAN_DOC($_PLAN_DOC(no),tubeSides)     {{36}}
 set _PLAN_DOC($_PLAN_DOC(no),display_name)  {{Max Sac Diameter}}
@@ -116,8 +114,6 @@ set _PLAN_DOC($_PLAN_DOC(no),Visible)       {{1}}
 set _PLAN_DOC($_PLAN_DOC(no),Trans)         {{0}}
 set _PLAN_DOC($_PLAN_DOC(no),TransLevel)    {{0}}
 set _PLAN_DOC($_PLAN_DOC(no),Value)         {{{sac_mm}}}
-set _PLAN_DOC($_PLAN_DOC(no),mark1)         {{}}
-set _PLAN_DOC($_PLAN_DOC(no),mark2)         {{}}
 set _PLAN_DOC($_PLAN_DOC(no),calcModelType) {{oblique}}
 set _PLAN_DOC($_PLAN_DOC(no),tubeSides)     {{36}}
 set _PLAN_DOC($_PLAN_DOC(no),display_name)  {{Max Sac Diameter}}
@@ -134,7 +130,6 @@ set _PLAN_DOC($_PLAN_DOC(no),TransLevel)    {{0}}
 set _PLAN_DOC($_PLAN_DOC(no),Value)         {{{endoleak_cc}}}
 set _PLAN_DOC($_PLAN_DOC(no),slice1)        {{0}}
 set _PLAN_DOC($_PLAN_DOC(no),slice2)        {{0}}
-set _PLAN_DOC($_PLAN_DOC(no),volumeObject)  {{}}
 set _PLAN_DOC($_PLAN_DOC(no),display_name)  {{Endo Vol to Ao Bifur}}
 set _PLAN_DOC($_PLAN_DOC(no),unit)          {{cc}}
 incr _PLAN_DOC(no)
