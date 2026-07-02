@@ -72,6 +72,10 @@ Then start:
 
 ```sh
 colima start          # if not already running
+
+# IMPORTANT: run docker compose from the real USB path, not a symlink.
+# Colima's virtiofs cannot follow host symlinks that cross mount boundaries.
+cd /Volumes/edevri-usb/git-ubuntu/astute/preview/repos/astute-cli
 docker compose up -d
 ```
 

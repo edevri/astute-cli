@@ -66,8 +66,8 @@ services:
       REDIS_HOST: "astute-redis"
       REDIS_PORT: "6379"
     volumes:
-      - ../service-authenticate/keys:/app/keys:ro
-      - ../service-authenticate/keys_public:/app/keys_public:ro
+      - ./docker/keys/private:/app/keys:ro
+      - ./docker/keys/public:/app/keys_public:ro
     ports:
       - "8000:8000"
     depends_on:
