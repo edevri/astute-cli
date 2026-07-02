@@ -14,11 +14,11 @@ export async function growthGet(patientId: number, jsonOutput: boolean): Promise
   const series = await op.get(patientId)
 
   if (jsonOutput) {
-    console.log(JSON.stringify(series, null, 2))
+    console.log(JSON.stringify(series.model, null, 2))
     return
   }
 
-  const { points, derived } = series
+  const { points, derived } = series.model
 
   const colWidths = [12, 16, 10, 10]
   const header = ['DATE', 'DIAMETER (mm)', 'DELTA', 'FLAGS']

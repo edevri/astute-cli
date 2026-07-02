@@ -25,15 +25,17 @@ export class MeasurementOperator {
 
 export class GrowthSeriesOperator {
   constructor(private client: BffClient) {}
-  async get(patientId: number): Promise<GrowthSeries> {
-    return this.client.get<GrowthSeries>(`/patient/${patientId}/growth`)
+  async get(patientId: number, opts?: { includePhi?: boolean }): Promise<GrowthSeries> {
+    const params = opts?.includePhi ? { includePhi: 'true' } : undefined
+    return this.client.get<GrowthSeries>(`/patient/${patientId}/growth`, params)
   }
 }
 
 export class SurveillanceOperator {
   constructor(private client: BffClient) {}
-  async get(patientId: number): Promise<SurveillanceResult> {
-    return this.client.get<SurveillanceResult>(`/patient/${patientId}/surveillance`)
+  async get(patientId: number, opts?: { includePhi?: boolean }): Promise<SurveillanceResult> {
+    const params = opts?.includePhi ? { includePhi: 'true' } : undefined
+    return this.client.get<SurveillanceResult>(`/patient/${patientId}/surveillance`, params)
   }
 }
 

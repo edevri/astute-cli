@@ -14,7 +14,7 @@ export async function surveillanceGet(
 
   const client = new BffClient(token)
   const op = new SurveillanceOperator(client)
-  const result = await op.get(patientId)
+  const result = await op.get(patientId, { includePhi })
 
   if (jsonOutput) {
     if (includePhi) {

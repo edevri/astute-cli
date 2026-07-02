@@ -23,10 +23,17 @@ export type GrowthDerived = {
   provenance: string
 }
 
-export type GrowthSeries = {
-  points: GrowthPoint[]
-  derived: GrowthDerived
+export type TwoChannelResult<M, W> = {
+  readonly model: M
+  readonly widgetOnly: W
 }
+
+export type GrowthPHI = { patientName: string | null }
+
+export type GrowthSeries = TwoChannelResult<
+  { points: GrowthPoint[]; derived: GrowthDerived },
+  GrowthPHI
+>
 
 export enum DeviceFamily {
   EndurantIIs = 'EndurantIIs',
@@ -47,11 +54,6 @@ export type IFUCheckRow = {
 export type IFUResult = {
   family: DeviceFamily
   rows: IFUCheckRow[]
-}
-
-export type TwoChannelResult<M, W> = {
-  readonly model: M
-  readonly widgetOnly: W
 }
 
 export type SurveillanceStudyModel = {
