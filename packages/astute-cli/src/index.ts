@@ -48,7 +48,7 @@ if (cmd === 'auth') {
   }
 } else if (cmd === 'study') {
   if (sub === 'list') {
-    const patientIdStr = rest.find((a) => !a.startsWith('-'))
+    const patientIdStr = rest.find((a) => /^\d+$/.test(a))
     await studyList(
       patientIdStr !== undefined ? Number(patientIdStr) : undefined,
       rest.includes('--include-phi'),
@@ -60,7 +60,7 @@ if (cmd === 'auth') {
   }
 } else if (cmd === 'measurement') {
   if (sub === 'get') {
-    const studyIdStr = rest.find((a) => !a.startsWith('-'))
+    const studyIdStr = rest.find((a) => /^\d+$/.test(a))
     if (!studyIdStr) {
       console.error('Usage: astute measurement get <studyId> [--field <name>] [--format table]')
       process.exit(1)
@@ -83,7 +83,7 @@ if (cmd === 'auth') {
   if (sub === 'families') {
     console.log(Object.values(DeviceFamily).join('\n'))
   } else if (sub === 'check') {
-    const studyIdStr = rest.find((a) => !a.startsWith('-'))
+    const studyIdStr = rest.find((a) => /^\d+$/.test(a))
     if (!studyIdStr) {
       console.error('Usage: astute ifu check <studyId> [--family <name>] [--format table]')
       process.exit(1)
