@@ -91,7 +91,7 @@ astute auth login
 
 Credentials for the local stack: `afouad` / `test1234`
 
-### 8. Seed synthetic test data (first time only)
+### 8. Seed synthetic test data (run after every full stack restart)
 
 The DB dump has studies but no measurement records, so `astute growth` and `astute surveillance` return empty results against real DB data. Run the seed script once to create a synthetic patient with complete data:
 
@@ -102,7 +102,7 @@ pip3 install azure-storage-blob psycopg2-binary --break-system-packages
 python3 docker/seed-synthetic.py
 ```
 
-This inserts into the local postgres and uploads `.rpl` measurement files to Azurite. It is idempotent — safe to re-run.
+This fixes auth (afouad password + OTP), inserts synthetic patients/studies, and uploads `.rpl` measurement files to Azurite. It is idempotent — safe to re-run. **Must be re-run whenever `preview-sql` is recreated** (the DB has no persistent volume, so data resets on container restart).
 
 **What gets created:**
 

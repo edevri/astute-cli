@@ -48,12 +48,13 @@ export async function authLogin(): Promise<void> {
     body: JSON.stringify({ userName, password }),
   })
 
+  const validateData = (await validateRes.json()) as Record<string, unknown>
+
   if (!validateRes.ok) {
-    console.error('Login failed: invalid credentials')
+    const msg = (validateData['message'] as string | undefined) ?? `HTTP ${validateRes.status}`
+    console.error(`Login failed: ${msg}`)
     process.exit(1)
   }
-
-  const validateData = (await validateRes.json()) as Record<string, unknown>
   const authId = validateData['auth_id'] as string
 
   const tokenRes = await fetch(`${ASTUTE_AUTH_URL}/auth/token`, {

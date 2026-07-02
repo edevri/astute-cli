@@ -55,6 +55,7 @@ build_python_service service-user          service-user
 build_python_service service-organization  service-organization
 build_python_service service-patient       service-patient
 build_python_service service-study         service-study
+build_python_service service-order         service-order
 build_python_service service-protocol      service-protocol
 build_python_service service-storage-azure service-storage-azure app:app
 build_python_service service-calc-generate service-calc-generate

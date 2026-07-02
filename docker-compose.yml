@@ -18,6 +18,8 @@ services:
       POSTGRES_PASSWORD: "f**b@ll"
     ports:
       - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -174,6 +176,27 @@ services:
         aliases:
           - preview-service-study
 
+  service-order:
+    image: astute-local/service-order
+    container_name: preview-service-order
+    environment:
+      PORT: "1050"
+      WORKERS: "2"
+      TIMEOUT: "60"
+      DATABASE_URL: "postgresql://postgres:f**b%40ll@preview-sql:5432/mms_matrix"
+      AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
+    ports:
+      - "1050:1050"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-authenticate:
+        condition: service_healthy
+    networks:
+      astute-local:
+        aliases:
+          - preview-service-order
+
   service-protocol:
     image: astute-local/service-protocol
     container_name: preview-service-protocol
@@ -185,7 +208,7 @@ services:
       AUTH_SERVICE_URL: "http://preview-service-authenticate:8000"
       STUDY_SERVICE_URL: "http://preview-service-study:1028"
       ORGANIZATION_SERVICE_URL: "http://preview-service-organization:1061"
-      ORDER_SERVICE_URL: "http://preview-service-protocol:1037"  # stub
+      ORDER_SERVICE_URL: "http://preview-service-order:1050"
     ports:
       - "1037:1037"
     depends_on:
@@ -194,6 +217,8 @@ services:
       service-authenticate:
         condition: service_healthy
       service-study:
+        condition: service_started
+      service-order:
         condition: service_started
     networks:
       astute-local:
@@ -376,3 +401,4 @@ networks:
 
 volumes:
   azurite-data:
+  postgres-data:

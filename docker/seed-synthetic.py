@@ -15,6 +15,7 @@ Requires: azure-storage-blob psycopg2-binary
 """
 
 import psycopg2
+import subprocess
 from azure.storage.blob import BlobServiceClient
 from azure.core.credentials import AzureNamedKeyCredential
 from datetime import date
@@ -166,18 +167,18 @@ def seed_db(conn):
         # Pre-op studies
         for s in PRE_OP_STUDIES:
             cur.execute("""
-                INSERT INTO old_studies (modelno, patient_id, scandate, anatomy, prepost, status, surveillance_measurements)
-                VALUES (%s, %s, %s, 'aaa', 'pre-op', 'A1M', '2')
+                INSERT INTO old_studies (modelno, patient_id, scandate, anatomy, prepost, status, surveillance_measurements, surgeon)
+                VALUES (%s, %s, %s, 'aaa', 'pre-op', 'A1M', '2', %s)
                 ON CONFLICT (modelno) DO NOTHING
-            """, (s["modelno"], PATIENT["patient_id"], s["scandate"]))
+            """, (s["modelno"], PATIENT["patient_id"], s["scandate"], PHYSICIAN_ID))
 
         # Post-op studies
         for s in POST_OP_STUDIES:
             cur.execute("""
-                INSERT INTO old_studies (modelno, patient_id, scandate, anatomy, prepost, status, surveillance_measurements)
-                VALUES (%s, %s, %s, 'aaa', 'post-op', 'A1M', '2')
+                INSERT INTO old_studies (modelno, patient_id, scandate, anatomy, prepost, status, surveillance_measurements, surgeon)
+                VALUES (%s, %s, %s, 'aaa', 'post-op', 'A1M', '2', %s)
                 ON CONFLICT (modelno) DO NOTHING
-            """, (s["modelno"], PATIENT["patient_id"], s["scandate"]))
+            """, (s["modelno"], PATIENT["patient_id"], s["scandate"], PHYSICIAN_ID))
 
     conn.commit()
     print("✓ DB seeded")
@@ -190,8 +191,14 @@ def seed_blobs(blob_service: BlobServiceClient):
     except Exception:
         pass  # already exists
 
+    # Remove any stale blobs for our synthetic studies before uploading fresh ones
+    study_ids = [s["modelno"] for s in PRE_OP_STUDIES + POST_OP_STUDIES]
+    for blob in container.list_blobs():
+        if any(str(sid) in blob.name for sid in study_ids):
+            container.delete_blob(blob.name)
+
     for s in PRE_OP_STUDIES:
-        protocol = "MMS-SRV-pre-op"
+        protocol = "MMS-SRV-pre"
         content = make_rpl_pre_op(s["modelno"], protocol, s["sac_mm"])
         path = blob_path(s["modelno"], protocol)
         container.upload_blob(path, content.encode(), overwrite=True)
@@ -205,7 +212,46 @@ def seed_blobs(blob_service: BlobServiceClient):
         print(f"✓ blob: {path}")
 
 
+def fix_auth(conn):
+    """
+    The DB dump has afouad's password as a plain MD5 hash and OTP enabled.
+    service-authenticate expects Werkzeug hashes. Generate one via the container
+    and patch both the accounts and users tables.
+    """
+    hash_cmd = [
+        "docker", "exec", "preview-service-authenticate",
+        "python3", "-c",
+        "from werkzeug.security import generate_password_hash; print(generate_password_hash('test1234'))"
+    ]
+    pw_hash = subprocess.check_output(hash_cmd).decode().strip()
+
+    with conn.cursor() as cur:
+        # Widen accounts.password if still at varchar(40)
+        cur.execute("""
+            SELECT character_maximum_length FROM information_schema.columns
+            WHERE table_name='accounts' AND column_name='password'
+        """)
+        row = cur.fetchone()
+        if row and row[0] and row[0] < 256:
+            # Drop views that depend on accounts.password, then widen
+            for view in ["ora_v.accounts_v", "dac_sftp_passwd", "dac_sftp_passwd1",
+                         "logins", "soaapi.accounts_s", "api.core_customers_3", "webdac_sftp_passwd"]:
+                cur.execute(f"DROP VIEW IF EXISTS {view} CASCADE")
+            cur.execute("ALTER TABLE accounts ALTER COLUMN password TYPE varchar(256)")
+
+        cur.execute("UPDATE accounts SET password=%s WHERE username='afouad'", (pw_hash,))
+        cur.execute("UPDATE users SET password=%s, otp_enabled=false WHERE username='afouad'", (pw_hash,))
+
+    conn.commit()
+    print("✓ Auth fixed (afouad / test1234, OTP disabled)")
+
+
 if __name__ == "__main__":
+    print("Fixing auth...")
+    conn = psycopg2.connect(DB_URL)
+    fix_auth(conn)
+    conn.close()
+
     print("Seeding DB...")
     conn = psycopg2.connect(DB_URL)
     seed_db(conn)
@@ -219,6 +265,6 @@ if __name__ == "__main__":
     print()
     print("Done. Test with:")
     print(f"  astute patient list             # should include patientId 299001")
-    print(f"  astute study list 299001")
+    print(f"  astute study list 299001 --output table")
     print(f"  astute growth 299001            # 3 points, accelerated growth flag")
     print(f"  astute surveillance 299001      # 2 post-op studies, sacExpansionConcerning + endoleakPresent")
