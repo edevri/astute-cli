@@ -88,6 +88,65 @@ incr _PLAN_DOC(no)
 """
 
 
+# IFU planning measurements for study 299103 (Demo 2 — EVAR planning)
+# Anatomy: short neck (12mm) + elevated angulation (65°) → only Conformable passes
+IFU_MEASUREMENTS = [
+    # (name, display_name, value, unit, calcType)
+    ("pnd1",               "Proximal Neck Diameter 1",     24.0, "mm",  "Distance"),
+    ("pnd2",               "Proximal Neck Diameter 2",     24.0, "mm",  "Distance"),
+    ("pnsz",               "Proximal Neck Size",           12.0, "mm",  "Distance"),
+    ("pn-aaa angle",       "PN-AAA Angle",                 65.0, "deg", "Distance"),
+    ("suprarenal-pn angle","Suprarenal PN Angle",          40.0, "deg", "Distance"),
+    ("rcia-av",            "Right CIA Average Diameter",   12.0, "mm",  "Distance"),
+    ("lcia-av",            "Left CIA Average Diameter",    12.0, "mm",  "Distance"),
+]
+
+
+def make_rpl_pre_op_ifu(study_id: int, protocol: str, sac_mm: float) -> str:
+    """Pre-op RPL with sac diameter + full IFU planning measurements."""
+    lines = [
+        "#",
+        "#  Plan Document written by Razz 1.19.7",
+        "#  Synthetic seed data",
+        "#",
+        f"#     ModelNo:   {study_id}",
+        f"#     Protocol:  {protocol}",
+        "#     Modeler:",
+        "#     Host:",
+        "#",
+        "",
+        "global _PLAN_DOC",
+        f"set _PLAN_DOC(Version)  v2",
+        f"set _PLAN_DOC(modelNo)  {{{study_id}}}",
+        f"set _PLAN_DOC(protocol) {{{protocol}}}",
+        "#",
+        "set _PLAN_DOC(no) 0",
+        "#",
+    ]
+
+    def add_entry(name, display_name, value, unit, calc_type):
+        lines.extend([
+            f"set _PLAN_DOC($_PLAN_DOC(no),calcType)      {{{calc_type}}}",
+            f"set _PLAN_DOC($_PLAN_DOC(no),name)          {{{name}}}",
+            f"set _PLAN_DOC($_PLAN_DOC(no),rgb)           {{0.5 0.5 0.5}}",
+            f"set _PLAN_DOC($_PLAN_DOC(no),comment)       {{}}",
+            f"set _PLAN_DOC($_PLAN_DOC(no),Visible)       {{1}}",
+            f"set _PLAN_DOC($_PLAN_DOC(no),Trans)         {{0}}",
+            f"set _PLAN_DOC($_PLAN_DOC(no),TransLevel)    {{0}}",
+            f"set _PLAN_DOC($_PLAN_DOC(no),Value)         {{{value}}}",
+            f"set _PLAN_DOC($_PLAN_DOC(no),display_name)  {{{display_name}}}",
+            f"set _PLAN_DOC($_PLAN_DOC(no),unit)          {{{unit}}}",
+            "incr _PLAN_DOC(no)",
+            "#",
+        ])
+
+    add_entry("max sac diameter", "Max Sac Diameter", sac_mm, "mm", "Distance")
+    for name, display_name, value, unit, calc_type in IFU_MEASUREMENTS:
+        add_entry(name, display_name, value, unit, calc_type)
+
+    return "\n".join(lines) + "\n"
+
+
 def make_rpl_post_op(study_id: int, protocol: str, sac_mm: float, endoleak_cc: float) -> str:
     return f"""#
 #  Plan Document written by Razz 1.19.7
@@ -194,7 +253,11 @@ def seed_blobs(blob_service: BlobServiceClient):
 
     for s in PRE_OP_STUDIES:
         protocol = "MMS-SRV-pre"
-        content = make_rpl_pre_op(s["modelno"], protocol, s["sac_mm"])
+        # Study 299103 gets IFU planning measurements for Demo 2
+        if s["modelno"] == 299103:
+            content = make_rpl_pre_op_ifu(s["modelno"], protocol, s["sac_mm"])
+        else:
+            content = make_rpl_pre_op(s["modelno"], protocol, s["sac_mm"])
         path = blob_path(s["modelno"], protocol)
         container.upload_blob(path, content.encode(), overwrite=True)
         print(f"✓ blob: {path}")
